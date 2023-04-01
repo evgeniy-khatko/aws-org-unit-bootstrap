@@ -1,0 +1,197 @@
+{
+  "AWSTemplateFormatVersion" : "2010-09-09",
+
+  "Description" : "GitHub Enterprise Server trial configuration",
+
+  "Parameters" : {
+    "Instance" : {
+      "Description" : "Type of EC2 instance to launch",
+      "Type" : "String",
+      "Default" : "r6i.xlarge",
+      "AllowedValues": [
+        "r4.xlarge", "r4.2xlarge", "r4.4xlarge", "r4.8xlarge", "r4.16xlarge",
+        "r5.xlarge", "r5.2xlarge", "r5.4xlarge", "r5.10xlarge", "r5.16xlarge",
+        "r6i.xlarge", "r6i.2xlarge", "r6i.4xlarge", "r6i.10xlarge", "r6i.16xlarge",
+        "m6i.32xlarge",
+        "x1.16xlarge", "x1.32xlarge"
+      ]
+    },
+    "Data" : {
+      "Description" : "Size of attached EBS volumes (in GB)",
+      "Type" : "Number",
+      "Default" : 150,
+      "MinValue" : 150,
+      "MaxValue" : 16000
+    },
+    "KeyName" : {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instances",
+      "Type" : "String",
+      "Default" : ""
+    }
+  },
+
+  "Conditions" : {
+    "HasKeyName" : { "Fn::Not" : [ { "Fn::Equals" : [ { "Ref" : "KeyName" }, ""] }] }
+  },
+
+  "Mappings" : {
+    "AWSRegion2Ami" : {
+      "ap-northeast-1" : { "AMI" : "ami-08c5495720f543359" },
+      "ap-northeast-2" : { "AMI" : "ami-06ab3c293ddabbc03" },
+      "ap-south-1" : { "AMI" : "ami-07d51b3066c83db53" },
+      "ap-southeast-1" : { "AMI" : "ami-07d9977c3b946e259" },
+      "ap-southeast-2" : { "AMI" : "ami-0971e6a853924515d" },
+      "ca-central-1" : { "AMI" : "ami-038fdd813d3b4bebc" },
+      "eu-central-1" : { "AMI" : "ami-0796014ef22ba2d33" },
+      "eu-north-1" : { "AMI" : "ami-01068ab5081ad81bb" },
+      "eu-west-1" : { "AMI" : "ami-0051d8623fe1e4e5f" },
+      "eu-west-2" : { "AMI" : "ami-03961b6c90e9d6c33" },
+      "eu-west-3" : { "AMI" : "ami-099751cec5b543582" },
+      "sa-east-1" : { "AMI" : "ami-0cb4e94a8ae576e52" },
+      "us-east-1" : { "AMI" : "ami-0f70df94f60c13af3" },
+      "us-east-2" : { "AMI" : "ami-028247d6382d23a5b" },
+      "us-west-1" : { "AMI" : "ami-01693f9f7f9070114" },
+      "us-west-2" : { "AMI" : "ami-01aefa7c5bc89e5db" },
+      "us-gov-west-1" : { "AMI" : "ami-04d6d8cc984c6c9dc" },
+      "us-gov-east-1" : { "AMI" : "ami-0577eaf6849005d3b" }
+    }
+  },
+
+  "Resources" : {
+    "GHSolo" : {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "KeyName": {
+          "Fn::If": [
+            "HasKeyName",
+            {
+              "Ref": "KeyName"
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "ImageId": {
+          "Fn::FindInMap": [
+            "AWSRegion2Ami",
+            {
+              "Ref": "AWS::Region"
+            },
+            "AMI"
+          ]
+        },
+        "InstanceType": {
+          "Ref": "Instance"
+        },
+        "EbsOptimized": true,
+        "BlockDeviceMappings": [
+          {
+            "DeviceName": "/dev/xvdf",
+            "Ebs": {
+              "VolumeType": "gp3",
+              "VolumeSize": {
+                "Ref": "Data"
+              },
+              "Encrypted": false,
+              "DeleteOnTermination": false
+            }
+          }
+        ],
+        "NetworkInterfaces" : [{
+          "GroupSet"                 : ["sg-05a91d2597a3f2aca"],
+          "AssociatePublicIpAddress" : "true",
+          "DeviceIndex"              : "0",
+          "DeleteOnTermination"      : "true",
+          "SubnetId"                 : "subnet-0fe963d7abffc0640"
+        }]
+      }
+    },
+
+    "GHInstanceSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "Enable SSH access and HTTP access on the inbound port",
+        "SecurityGroupIngress" : [ {
+          "IpProtocol" : "tcp",
+          "FromPort" : "22",
+          "ToPort" : "22",
+          "CidrIp" : "0.0.0.0/0"
+        },
+        {
+          "IpProtocol" : "tcp",
+          "FromPort" : 80,
+          "ToPort" : 80,
+          "CidrIp" : "0.0.0.0/0"
+        },
+        {
+          "IpProtocol" : "tcp",
+          "FromPort" : 8080,
+          "ToPort" : 8080,
+          "CidrIp" : "0.0.0.0/0"
+        },
+        {
+          "IpProtocol" : "tcp",
+          "FromPort" : 443,
+          "ToPort" : 443,
+          "CidrIp" : "0.0.0.0/0"
+        },
+        {
+          "IpProtocol" : "tcp",
+          "FromPort" : 8443,
+          "ToPort" : 8443,
+          "CidrIp" : "0.0.0.0/0"
+        },
+        {
+          "IpProtocol" : "tcp",
+          "FromPort" : 25,
+          "ToPort" : 25,
+          "CidrIp" : "0.0.0.0/0"
+        },
+        {
+          "IpProtocol" : "tcp",
+          "FromPort" : 1194,
+          "ToPort" : 1194,
+          "CidrIp" : "0.0.0.0/0"
+        },
+        {
+          "IpProtocol" : "udp",
+          "FromPort" : 1194,
+          "ToPort" : 1194,
+          "CidrIp" : "0.0.0.0/0"
+        },
+        {
+          "IpProtocol" : "tcp",
+          "FromPort" : 122,
+          "ToPort" : 122,
+          "CidrIp" : "0.0.0.0/0"
+        },
+        {
+          "IpProtocol" : "tcp",
+          "FromPort" : 9418,
+          "ToPort" : 9418,
+          "CidrIp" : "0.0.0.0/0"
+        },
+        {
+          "IpProtocol" : "udp",
+          "FromPort" : 123,
+          "ToPort" : 123,
+          "CidrIp" : "0.0.0.0/0"
+        },
+        {
+          "IpProtocol" : "udp",
+          "FromPort" : 161,
+          "ToPort" : 161,
+          "CidrIp" : "0.0.0.0/0"
+        } ]
+      }
+    }
+  },
+
+  "Outputs" : {
+    "SoloURL" : {
+      "Description" : "URL of the primary instance",
+      "Value" :  { "Fn::Join" : [ "", [ "http://", { "Fn::GetAtt" : [ "GHSolo", "PublicIp" ]}]]}
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "name": "aws-org-unit-network-infrastructure",
+  "version": "0.1.0",
+  "bin": {
+    "aws-org-unit-network-infrastructure": "bin/aws-org-unit-network-infrastructure.ts"
+  },
+  "license": "UNLICENSED",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest",
+    "cdk": "cdk",
+    "lint": "eslint . --ext .ts,.js",
+    "lint:fix": "eslint . --ext .ts,.js --fix",
+    "format": "prettier --write --ignore-unknown .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@types/jest": "^26.0.10",
+    "@types/node": "10.17.27",
+    "@typescript-eslint/eslint-plugin": "^5.22.0",
+    "@typescript-eslint/parser": "^5.23.0",
+    "eslint": "^8.15.0",
+    "husky": "^8.0.0",
+    "jest": "^26.4.2",
+    "lint-staged": "^12.4.1",
+    "prettier": "2.6.2",
+    "ts-jest": "^26.2.0",
+    "ts-node": "^9.0.0",
+    "typescript": "~3.9.7"
+  },
+  "dependencies": {
+    "aws-cdk-lib": "^2.23.0",
+    "constructs": "^10.1.5",
+    "cdk-iam-actions": "^1.0.0",
+    "source-map-support": "^0.5.16"
+  },
+  "lint-staged": {
+    "**/*": [
+      "prettier --write --ignore-unknown",
+      "eslint --fix --ext .ts,.js"
+    ]
+  }
+}
