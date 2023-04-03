@@ -30,6 +30,10 @@ export interface GheConnectionStackProps extends OuProps {
  * Every OU would require one GHE connection in their "Shared" account where all the code delivery pipelines live.
  */
 export class GheConnectionStack extends Stack {
+
+  // Following export name should be used to identify connectionArn in pipeline stacks
+  private static readonly GHE_CONNECTION_EXPORT_NAME="gheConnectionArn";
+
   private sharedVpc: IVpc;
   private names: ResourceNameProducer;
 
@@ -77,10 +81,7 @@ export class GheConnectionStack extends Stack {
       );
 
       this.exportValue(connection.attrConnectionArn, {
-        name: this.names.produceFromStack(
-          `ConnToGHEFor-${gheOrgName}`,
-          this
-        ),
+        name: GheConnectionStack.GHE_CONNECTION_EXPORT_NAME,
       });
       const connectionId = Fn.select(
         1,
